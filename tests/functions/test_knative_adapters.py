@@ -3,7 +3,8 @@ Tests for Knative ASGI request adapter
 """
 
 import json
-from unittest.mock import AsyncMock
+import asyncio
+from unittest.mock import AsyncMock, Mock
 
 import pytest
 
@@ -45,7 +46,7 @@ class TestAdaptAsgiRequest:
         assert result.headers['accept'] == 'application/json'
         assert result.headers['user-agent'] == 'test-client/1.0'
         assert result.headers['host'] == 'localhost:8080'
-        assert result.body is None or result.body == ''
+        assert result.body is None  # Empty body should be None
         assert result.source == 'knative'
 
     @pytest.mark.asyncio
@@ -57,7 +58,8 @@ class TestAdaptAsgiRequest:
             'age': 30,
             'active': True
         }
-        body_bytes = json.dumps(test_data).encode('utf-8')
+        json_string = json.dumps(test_data)
+        body_bytes = json_string.encode('utf-8')
 
         scope = {
             'type': 'http',
@@ -84,7 +86,8 @@ class TestAdaptAsgiRequest:
         assert result.path == '/api/users'
         assert result.headers['content-type'] == 'application/json'
         assert result.headers['authorization'] == 'Bearer token123'
-        assert result.body == test_data
+        # Body should be string now, JSON parsing happens via get_json()
+        assert result.body == json_string
         assert result.is_json() is True
         assert result.get_json() == test_data
         assert result.source == 'knative'
@@ -204,6 +207,7 @@ class TestAdaptAsgiRequest:
         assert result.query_string == 'filename=test.png'
         assert result.headers['content-type'] == 'image/png'
         assert result.headers['x-file-name'] == 'test.png'
+        # Binary data should remain as bytes (not converted to string)
         assert result.body == binary_data
         assert result.is_binary() is True
         assert result.is_json() is False
@@ -215,7 +219,8 @@ class TestAdaptAsgiRequest:
     async def test_chunked_body_reception(self):
         """Test receiving body in multiple chunks."""
         json_data = {'message': 'This is a longer message that might be chunked'}
-        full_body = json.dumps(json_data).encode('utf-8')
+        json_string = json.dumps(json_data)
+        full_body = json_string.encode('utf-8')
         chunk_size = 20
 
         scope = {
@@ -235,7 +240,7 @@ class TestAdaptAsgiRequest:
         # Mock receiving in chunks
         receive_calls = []
         for i, chunk in enumerate(chunks):
-            is_last = (i == len(chunks) - 1)
+            is_last = i == len(chunks) - 1
             receive_calls.append({
                 'type': 'http.request',
                 'body': chunk,
@@ -249,7 +254,8 @@ class TestAdaptAsgiRequest:
         assert isinstance(result, MultiCloudEvent)
         assert result.method == 'POST'
         assert result.path == '/api/messages'
-        assert result.body == json_data
+        # Body should be the JSON string, get_json() parses it
+        assert result.body == json_string
         assert result.is_json() is True
         assert result.get_json() == json_data
         assert result.source == 'knative'
@@ -336,31 +342,12 @@ class TestAdaptAsgiRequest:
         result = await adapt_asgi_request(scope, receive)
 
         assert isinstance(result, MultiCloudEvent)
-        assert result.method is None or result.method == 'GET'  # Depends on implementation
-        assert result.path is None or result.path == '/'
+        # Check for default values from your adapter implementation
+        assert result.method == 'GET'  # Default method
+        assert result.path == '/'  # Default path
         assert result.headers == {}
         assert result.query_string == ''
         assert result.source == 'knative'
-
-    @pytest.mark.asyncio
-    async def test_receive_exception_handling(self):
-        """Test error handling when receive() raises an exception."""
-        scope = {
-            'type': 'http',
-            'method': 'GET',
-            'path': '/test',
-            'query_string': b'',
-            'headers': []
-        }
-
-        receive = AsyncMock(side_effect=Exception("Connection lost"))
-
-        result = await adapt_asgi_request(scope, receive)
-
-        # The adapter should handle the exception gracefully
-        assert isinstance(result, MultiCloudEvent)
-        # The specific error handling depends on your implementation
-        # You might want to set error info in headers or have a specific error field
 
     @pytest.mark.asyncio
     async def test_unicode_content(self):
@@ -391,4 +378,216 @@ class TestAdaptAsgiRequest:
         assert result.path == '/api/unicode'
         assert result.body == unicode_text
         assert result.get_text() == unicode_text
+        assert result.source == 'knative'
+
+    @pytest.mark.asyncio
+    async def test_xml_content_handling(self):
+        """Test handling of XML content."""
+        xml_content = '<user><name>John</name><age>30</age></user>'
+        body_bytes = xml_content.encode('utf-8')
+
+        scope = {
+            'type': 'http',
+            'method': 'POST',
+            'path': '/api/xml',
+            'query_string': b'',
+            'headers': [
+                (b'content-type', b'application/xml'),
+            ]
+        }
+
+        receive = AsyncMock(return_value={
+            'type': 'http.request',
+            'body': body_bytes,
+            'more_body': False
+        })
+
+        result = await adapt_asgi_request(scope, receive)
+
+        assert isinstance(result, MultiCloudEvent)
+        assert result.method == 'POST'
+        assert result.path == '/api/xml'
+        assert result.body == xml_content
+        assert result.is_xml() is True
+        assert result.is_json() is False
+        assert result.get_text() == xml_content
+        # Test XML parsing
+        xml_data = result.get_xml()
+        assert xml_data is not None
+        assert xml_data['name'] == 'John'
+        assert xml_data['age'] == '30'
+        assert result.source == 'knative'
+
+    @pytest.mark.asyncio
+    async def test_connection_error_handling(self):
+        """
+        Test handling of connection errors during receive.
+        """
+        scope = {
+            'type': 'http',
+            'method': 'POST',
+            'path': '/api/test',
+            'headers': [(b'content-type', b'application/json')]
+        }
+
+        # Mock receive to raise ConnectionError
+        receive = AsyncMock(side_effect=ConnectionError("Connection lost"))
+
+        result = await adapt_asgi_request(scope, receive)
+
+        assert isinstance(result, MultiCloudEvent)
+        assert result.method == 'POST'
+        assert result.path == '/api/test'
+        assert 'x-error' in result.headers
+        assert 'Connection error' in result.headers['x-error']
+        assert result.query_string == ''
+        assert result.source == 'knative'
+
+    @pytest.mark.asyncio
+    async def test_timeout_error_handling(self):
+        """Test handling of timeout errors during receive."""
+        scope = {
+            'type': 'http',
+            'method': 'GET',
+            'path': '/api/timeout',
+            'headers': []
+        }
+
+        # Mock receive to raise TimeoutError
+        receive = AsyncMock(side_effect=asyncio.TimeoutError("Request timeout"))
+
+        result = await adapt_asgi_request(scope, receive)
+
+        assert isinstance(result, MultiCloudEvent)
+        assert result.method == 'GET'
+        assert result.path == '/api/timeout'
+        assert 'x-error' in result.headers
+        assert 'Connection error' in result.headers['x-error']
+        assert result.source == 'knative'
+
+    @pytest.mark.asyncio
+    async def test_unicode_decode_error_in_headers(self):
+        """
+        Test handling of UnicodeDecodeError in header processing.
+        """
+        scope = {
+            'type': 'http',
+            'method': 'POST',
+            'path': '/api/test',
+            'headers': [
+                (b'content-type', b'application/json'),
+                (b'invalid-header', b'\xff\xfe\x00\x00')  # Invalid UTF-8 bytes
+            ]
+        }
+
+        receive = AsyncMock(return_value={
+            'type': 'http.request',
+            'body': b'{"test": "data"}',
+            'more_body': False
+        })
+
+        result = await adapt_asgi_request(scope, receive)
+
+        assert isinstance(result, MultiCloudEvent)
+        assert result.method == 'POST'
+        assert result.path == '/api/test'
+        assert 'x-error' in result.headers
+        assert 'Encoding error' in result.headers['x-error']
+        assert result.source == 'knative'
+
+    @pytest.mark.asyncio
+    async def test_unicode_decode_error_in_query_string(self):
+        """Test handling of UnicodeDecodeError in query string processing."""
+        scope = {
+            'type': 'http',
+            'method': 'GET',
+            'path': '/api/test',
+            'query_string': b'\xff\xfe\x00\x00',  # Invalid UTF-8 bytes
+            'headers': []
+        }
+
+        receive = AsyncMock(return_value={
+            'type': 'http.request',
+            'body': b'',
+            'more_body': False
+        })
+
+        result = await adapt_asgi_request(scope, receive)
+
+        assert isinstance(result, MultiCloudEvent)
+        assert result.method == 'GET'
+        assert result.path == '/api/test'
+        assert 'x-error' in result.headers
+        assert 'Encoding error' in result.headers['x-error']
+        assert result.source == 'knative'
+
+    @pytest.mark.asyncio
+    async def test_key_error_handling(self):
+        """Test handling of KeyError when required scope keys are missing."""
+        # Create a mock scope that will cause KeyError when accessed
+        scope = Mock()
+        scope.get = Mock(side_effect=KeyError("Required key missing"))
+
+        receive = AsyncMock(return_value={
+            'type': 'http.request',
+            'body': b'',
+            'more_body': False
+        })
+
+        result = await adapt_asgi_request(scope, receive)
+
+        assert isinstance(result, MultiCloudEvent)
+        assert result.method == 'GET'  # Default value
+        assert result.path == '/'  # Default value
+        assert 'x-error' in result.headers
+        assert 'Missing key' in result.headers['x-error']
+        assert result.source == 'knative'
+
+    @pytest.mark.asyncio
+    async def test_receive_message_not_http_request(self):
+        """Test handling when receive message is not http.request type."""
+        scope = {
+            'type': 'http',
+            'method': 'GET',
+            'path': '/api/test',
+            'headers': []
+        }
+
+        # Return a different message type
+        receive = AsyncMock(return_value={
+            'type': 'http.disconnect',  # Not http.request
+            'body': b'should not be processed'
+        })
+
+        result = await adapt_asgi_request(scope, receive)
+
+        assert isinstance(result, MultiCloudEvent)
+        assert result.method == 'GET'
+        assert result.path == '/api/test'
+        assert result.body is None  # No body should be processed
+        assert result.source == 'knative'
+
+    @pytest.mark.asyncio
+    async def test_missing_scope_defaults(self):
+        """Test adapter behavior with missing scope keys (uses defaults)."""
+        # Minimal scope with missing optional keys
+        scope = {
+            'type': 'http'
+            # Missing method, path, query_string, headers
+        }
+
+        receive = AsyncMock(return_value={
+            'type': 'http.request',
+            'body': b'test',
+            'more_body': False
+        })
+
+        result = await adapt_asgi_request(scope, receive)
+
+        assert isinstance(result, MultiCloudEvent)
+        assert result.method == 'GET'  # Default
+        assert result.path == '/'  # Default
+        assert result.headers == {}  # Default (empty dict)
+        assert result.query_string == ''  # Default
+        assert result.body == b'test'  # Should still process body as binary (no content-type)
         assert result.source == 'knative'

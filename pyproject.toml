@@ -18,3 +18,35 @@ allow-direct-references = true
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/multicloud"]
+
+[project.optional-dependencies]
+def = [
+    "pytest>=7.0",
+    "pytest-cov",
+    "pytest-asyncio",
+    "pylint"
+]
+
+[tool.coverage.run]
+source = ["src"]
+omit = [
+    "*/tests/*",
+    "*/test_*",
+    "*/__pycache__/*",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise AssertionError",
+    "raise NotImplementedError",
+]
+show_missing = true
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+markers = [
+    "asyncio: mark test as an asyncio coroutine"
+]
+testpaths = ["tests"]

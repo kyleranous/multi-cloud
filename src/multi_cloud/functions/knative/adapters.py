@@ -6,7 +6,7 @@ import logging
 import json
 
 
-async def parse_asgi_request(scope, receive) -> dict:
+async def adapt_asgi_request(scope, receive) -> dict:
     """ 
     Parse a Knative HTTP Request into a normalized event dictionary.
     """
@@ -61,7 +61,7 @@ async def parse_asgi_request(scope, receive) -> dict:
         }
 
 
-async def parse_cloud_event(scope, receive) -> dict:
+async def adapt_cloud_event_request(scope, receive) -> dict:
     """ 
     Parse a Knative Cloud Event into a normalized event dictionary.
     """

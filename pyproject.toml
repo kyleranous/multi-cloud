@@ -3,7 +3,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "multi-cloud"
+name = "multicloud"
 version = "0.1.0"
 description = "Multi-Cloud serverless framework"
 readme = "README.md"
@@ -17,4 +17,4 @@ authors = [
 allow-direct-references = true
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/multi_cloud"]
+packages = ["src/multicloud"]

@@ -31,6 +31,7 @@ Core Properties
 
 ## Methods
 ### Header Operations
+### get_header
 `get_header(name: str, default: Optional[str] = None) -> Optional[str]`
 
 Get header value case-insensitively.
@@ -119,4 +120,104 @@ event = MultiCloudEvent(
 
 event.is_xml() # True
 event.is_json() # False
+```
+
+### is_form_data
+`is_form_data() -> bool`
+Checks if the request content is x-www-form-urlencoded
+
+**Returns**: `bool`
+
+**Example**:
+```python
+event = MultiCloudEvent(
+    method="POST", 
+    path="/api",
+    headers={"Content-Type": "application/x-www-form-urlencoded"},
+    body="name=John&age=30"
+)
+
+event.is_form_data() # True
+event.is_json() # False
+```
+
+### is_multipart
+`is_multipart() -> bool`
+
+Checks if the request content is multipart form data
+
+**Returns**: bool
+
+**Example**:
+```python
+event = MultiCloudEvent(
+    method="POST",
+    path="/api/upload",
+    headers={
+        "Content-Type": "multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW",
+        "Content-Length": "1024"
+    },
+    body=b'------WebKitFormBoundary7MA4YWxkTrZu0gW\r\nContent-Disposition: form-data; name="username"\r\n\r\nJohn\r\n------WebKitFormBoundary7MA4YWxkTrZu0gW\r\nContent-Disposition: form-data; name="avatar"; filename="profile.jpg"\r\nContent-Type: image/jpeg\r\n\r\n[binary image data]\r\n------WebKitFormBoundary7MA4YWxkTrZu0gW--\r\n'
+)
+
+event.is_multipart() # True
+```
+
+### is_binary
+`is_binary() -> bool`
+
+Checks if request content type is binary
+
+**Returns**: bool
+
+**Example**:
+```python
+event = MultiCloudEvent(
+    method="POST",
+    path="/api/upload/image",
+    headers={"Content-Type": "image/jpeg"},
+    body=b'\xff\xd8\xff\xe0\x00\x10JFIF...'  # JPEG binary data
+)
+
+event.is_binary() # True
+```
+
+### Getters
+
+### get_json
+`get_json() -> Optional[Dict[str, Any]]`
+
+Returns the body as a dictionary object
+
+**Returns**: `Dict` or `None`
+
+**Example**:
+```python
+event = MultiCloudEvent(
+    method="POST",
+    path="/api/users",
+    headers={"Content-Type": "application/json"},
+    body={"name": "John", "age": 30}
+)
+
+event.get_json() # {'name': 'John', 'age': 30}
+```
+
+### get_xml
+`get_xml() -> Optional[Dict[str, Any]]`
+
+Returns the body as a dictionary object
+
+**Returns**: `Dict` or `None`
+
+**Example**:
+```python
+event = MultiCloudEvent(
+    method="POST",
+    path="/api", 
+    headers={"Content-Type": "text/xml"},
+    body="<user><name>John</name></user>"
+)
+
+event.get_xml() # {'name': 'John'}
 ```

@@ -12,7 +12,6 @@ license = "MIT"
 authors = [
     {name = "Kyle Ranous", email = "kranous05@gmail.com"}
 ]
-dynamic = ["readme"]
 
 [tool.hatch.metadata]
 allow-direct-references = true

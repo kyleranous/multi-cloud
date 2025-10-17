@@ -54,9 +54,69 @@ auth = event.get_header("AUTHORIZATION")         # "Bearer token"
 missing = event.get_header("x-missing", "none")  # "none"
 ```
 
-### Query Patameter Operations
-`get_query_param(name: str, default: Optional[str] = None) -> Optional[str]
+### Query Parameter Operations
+### get_query_param
+`get_query_param(name: str, default: Optional[str] = None) -> Optional[str]`
 
 Extract query parameter by name
 
 **Parameters**:
+- `name`: Query parameter to retrieve
+- `default`: Default value if query parameter not found
+
+**Returns**: Query parameter value or default
+
+**Example**:
+```python
+event = MultiCloudEvent(
+    method="GET",
+    path="/api",
+    headers={"Content-Type": "application/json", "Authorization": "Bearer token"},
+    query_string="page=1&limit=10"
+)
+
+event.get_query_parame("page") # 1
+event.get_query_param("limit") # 10
+event.get_query_param("name") # "none"
+```
+
+### Content Type Checks
+
+### is_json
+
+`is_json() -> bool`
+
+Checks if the request content is JSON
+
+**Returns**: `bool`
+
+**Example**:
+```python
+event = MultiCloudEvent(
+    method="POST",
+    path="/api/users",
+    headers={"Content-Type": "application/json"},
+    body={"name": "John", "age": 30}
+)
+
+event.is_json() # True
+event.is_xml() # False
+```
+### is_xml
+`is_xml() -> bool`
+Checks if the request content is XML
+
+**Returns**: `bool`
+
+**Example**:
+```python
+event = MultiCloudEvent(
+    method="POST",
+    path="/api", 
+    headers={"Content-Type": "text/xml"},
+    body="<user><name>John</name></user>"
+)
+
+event.is_xml() # True
+event.is_json() # False
+```

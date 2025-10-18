@@ -1,4 +1,5 @@
 # MultiCloudEvent
+`from multicloud.functions import MultiCloudEvent`
 
 ## Overview
 `MultiCloudEvent` is a normalized event structure for multi-cloud serverless functions. It provides a consistent interface for handling http requests across different cloud platforms (Knative, AWS Lambda, Azure Functions, Google Cloud Functions, etc.)

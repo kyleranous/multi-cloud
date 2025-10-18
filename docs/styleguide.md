@@ -192,11 +192,3 @@ Minimum test coverage is `85%` with a minimum of `75%` for each file.
 ### Configuration Files
 
 ### Default Values
-
-## Cloud Platform Conventions
-
-### Function Naming
-
-### Resource Naming
-
-### Deployment Patterns

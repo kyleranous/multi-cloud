@@ -221,3 +221,62 @@ event = MultiCloudEvent(
 
 event.get_xml() # {'name': 'John'}
 ```
+
+### get_binary
+`get_binary() -> Optional[bytes]`
+
+Returns the raw binary of the body object if it is a binary object.
+
+**Returns**: `bytes` or `None`
+
+**Example**:
+```python
+event = MultiCloudEvent(
+    method="POST",
+    path="/api/upload/image",
+     headers={"Content-Type": "image/jpeg"},
+   body=b'\xff\xd8\xff\xe0\x00\x10JFIF\x00\x01\x01\x01\x00H\x00H\x00\x00'
+)
+
+len(event.get_binary()) # 20
+```
+
+### get_text
+`get_text(encoding: Optional[str] = 'utf-8') -> Optional[str]`
+Returns the body object as text decoding from bytes if necessary.
+
+**Parameters**:
+- `encoding`: Encoding to use for byte object
+
+**Returns**: `str` or `None`
+
+**Example**:
+```python
+event = MultiCloudEvent(
+    method="POST",
+    path="/api/data",
+    headers={"Content-Type": "text/plain; charset=utf-8"},
+    body=b"Hello World \xe2\x9c\x93"  # UTF-8 encoded bytes with checkmark
+)
+
+event.get_text()  # "Hello World ✓"
+```
+
+### get_base64
+`get_base64() -> Optional[str]
+
+Gets the base64 encoded string of the body if a binary object, or the body if it is a string.
+
+**Returns**: `str` or `None`
+
+**Example**:
+```python
+event = MultiCloudEvent(
+    method="POST",
+    path="/api/upload/image",
+    headers={"Content-Type": "image/jpeg"},
+    body=b'\xff\xd8\xff\xe0\x00\x10JFIF\x00\x01\x01\x01\x00H\x00H\x00\x00'
+)
+
+event.get_base64() # "/9j.4AAQSkZJRgABAQEASABIAAA="
+```

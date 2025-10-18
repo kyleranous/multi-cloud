@@ -32,10 +32,6 @@
     - [Environment Variables](#environment-variables)
     - [Configuration Files](#configuration-files)
     - [Default Values](#default-values)
-- [Cloud Platform Conventions](#cloud-platform-conventions)
-    - [Function Naming](#function-naming)
-    - [Resource Naming](#resource-naming)
-    - [Deployment Patterns](#deployment-patterns)
 
 ## Code Style
 

@@ -11,13 +11,14 @@ Exports:
 
 Example:
     Basic usage with Knative serving:
-    
+
     >>> from multicloud.functions.knative import adapt_asgi_request
     >>> async def my_handler(scope, receive, send):
     ...     event = await adapt_asgi_request(scope, receive)
     ...     # Process the normalized event
     ...     return {"message": f"Received {event.method} request to {event.path}"}
 """
+
 from . import knative
 
-__all__ = ['knative']
+__all__ = ["knative"]

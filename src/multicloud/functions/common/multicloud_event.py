@@ -1,6 +1,7 @@
 """
 Core Event Classes for Multi-Cloud Functions
 """
+
 from urllib.parse import parse_qs
 from typing import Dict, Any, Optional, Union
 from dataclasses import dataclass
@@ -15,6 +16,7 @@ class MultiCloudEvent:
     """
     A normalized event structure for multi-cloud serverless functions.
     """
+
     method: str
     path: str
     headers: Dict[str, str]
@@ -32,7 +34,9 @@ class MultiCloudEvent:
                 return value
         return default
 
-    def get_query_param(self, name: str, default: Optional[str] = None) -> Optional[str]:
+    def get_query_param(
+        self, name: str, default: Optional[str] = None
+    ) -> Optional[str]:
         """
         Extract query parameter by name.
         """
@@ -43,31 +47,35 @@ class MultiCloudEvent:
         """
         Check if request has JSON content type.
         """
-        content_type = self.get_header('content-type', '')
-        return ('application/json' in content_type.lower() or
-                'text/json' in content_type.lower())
+        content_type = self.get_header("content-type", "")
+        return (
+            "application/json" in content_type.lower()
+            or "text/json" in content_type.lower()
+        )
 
     def is_xml(self) -> bool:
         """
         Check if request has XML content type.
         """
-        content_type = self.get_header('content-type', '')
-        return ('application/xml' in content_type.lower() or
-                'text/xml' in content_type.lower())
+        content_type = self.get_header("content-type", "")
+        return (
+            "application/xml" in content_type.lower()
+            or "text/xml" in content_type.lower()
+        )
 
     def is_form_data(self) -> bool:
         """
         Check if request is form data.
         """
-        content_type = self.get_header('content-type', '')
-        return 'application/x-www-form-urlencoded' in content_type.lower()
+        content_type = self.get_header("content-type", "")
+        return "application/x-www-form-urlencoded" in content_type.lower()
 
     def is_multipart(self) -> bool:
         """
         Check if request is multipart form data.
         """
-        content_type = self.get_header('content-type', '')
-        return 'multipart/form-data' in content_type.lower()
+        content_type = self.get_header("content-type", "")
+        return "multipart/form-data" in content_type.lower()
 
     def is_binary(self) -> bool:
         """
@@ -112,7 +120,7 @@ class MultiCloudEvent:
             return self.body
         return None
 
-    def get_text(self, encoding: str = 'utf-8') -> Optional[str]:
+    def get_text(self, encoding: str = "utf-8") -> Optional[str]:
         """
         Get body as text, decoding from bytes if necessary.
         """
@@ -130,7 +138,7 @@ class MultiCloudEvent:
         Get binary body as base64 encoded string.
         """
         if isinstance(self.body, bytes):
-            return base64.b64encode(self.body).decode('ascii')
+            return base64.b64encode(self.body).decode("ascii")
         return None
 
     def _xml_to_dict(self, element) -> Dict[str, Any]:
@@ -141,13 +149,13 @@ class MultiCloudEvent:
 
         # Add attributes
         if element.attrib:
-            result['@attributes'] = element.attrib
+            result["@attributes"] = element.attrib
 
         # Add text content
         if element.text and element.text.strip():
             if len(element) == 0:  # No children
                 return element.text.strip()
-            result['text'] = element.text.strip()
+            result["text"] = element.text.strip()
 
         # Add children
         for child in element:

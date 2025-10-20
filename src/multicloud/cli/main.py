@@ -26,12 +26,7 @@ def get_version() -> str:
 
 @click.group()
 @click.version_option(version=get_version(), prog_name="MultiCloud CLI")
-@click.option(
-    "--verbose",
-    "-v",
-    is_flag=True,
-    help="Enable verbose output"
-)
+@click.option("--verbose", "-v", is_flag=True, help="Enable verbose output")
 @click.pass_context
 def cli(ctx: click.Context, verbose: bool) -> None:
     """

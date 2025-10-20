@@ -12,12 +12,15 @@ license = "MIT"
 authors = [
     {name = "Kyle Ranous", email = "kranous05@gmail.com"}
 ]
+dependencies = [
+    "click>=8.0.0",
+    "pyyaml",
+    "jinja2"
+]
 
-[tool.hatch.metadata]
-allow-direct-references = true
-
-[tool.hatch.build.targets.wheel]
-packages = ["src/multicloud"]
+[project.scripts]
+multicloud = "multicloud.cli.main:cli"
+mc = "multicloud.cli.main:cli" # Short Alias
 
 [project.optional-dependencies]
 def = [
@@ -26,6 +29,12 @@ def = [
     "pytest-asyncio",
     "pylint"
 ]
+
+[tool.hatch.metadata]
+allow-direct-references = true
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/multicloud"]
 
 [tool.coverage.run]
 source = ["src"]

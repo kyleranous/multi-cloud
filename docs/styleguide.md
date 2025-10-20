@@ -39,7 +39,7 @@
 
 ### Python Code Conventions
 - **PEP 8 Complaince**: Follow Python PEP 8 style guidlines
-- **Line Length**: Maximum 100 characters
+- **Line Length**: Maximum 88 characters
 - **Indentation**: 4 spaces (no tabs)
 - **Linting**:
     - Use `pylint`
@@ -155,7 +155,7 @@ src/multicloud/
 ### Pull Request Guidelines
 
 ## Testing Standards
-All tests must pass before a pull request will be excepted.
+All tests must pass for all supported python versions before a pull request will be excepted.
 
 ### Test Structure
 

@@ -2,9 +2,12 @@
 MultiCloud CLI main entry point.
 """
 
-import click
 import tomllib
 from pathlib import Path
+import click
+
+# Import Command modules
+from .commands import config_command
 
 
 def get_version() -> str:
@@ -37,3 +40,7 @@ def cli(ctx: click.Context, verbose: bool) -> None:
     # Ensure context object exists
     ctx.ensure_object(dict)
     ctx.obj["verbose"] = verbose
+
+
+# Add commands to the CLI group
+cli.add_command(config_command.config)

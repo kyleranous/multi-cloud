@@ -1,6 +1,7 @@
 """
 Tests for MultiCloudEvents
 """
+
 import base64
 from multicloud.functions.common.multicloud_event import MultiCloudEvent
 
@@ -9,6 +10,7 @@ class TestMultiCloudEvent:
     """
     Tests for MultiCloudEvent data class.
     """
+
     def test_basic_event_creation(self, basic_get_event):
         """
         Test creating a basic MultiCloudEvent.
@@ -29,10 +31,13 @@ class TestMultiCloudEvent:
         event = MultiCloudEvent(
             method="POST",
             path="/api/users",
-            headers={"content-type": "application/json", "authorization": "Bearer token123"},
+            headers={
+                "content-type": "application/json",
+                "authorization": "Bearer token123",
+            },
             query_string="limit=10&offset=0",
             body={"name": "John", "age": 30},
-            source="knative"
+            source="knative",
         )
 
         assert event.method == "POST"
@@ -51,7 +56,7 @@ class TestMultiCloudEvent:
             headers={"content-type": "application/json"},
             query_string="param=value",
             body={"data": "test"},
-            source="knative"
+            source="knative",
         )
 
         event2 = MultiCloudEvent(
@@ -60,7 +65,7 @@ class TestMultiCloudEvent:
             headers={"content-type": "application/json"},
             query_string="param=value",
             body={"data": "test"},
-            source="knative"
+            source="knative",
         )
 
         assert event1 == event2
@@ -96,6 +101,7 @@ class TestMultiCloudHeaders:
     """
     Test for header related functionality in MultiCloudEvent.
     """
+
     def test_get_header_case_insensitive(self, case_sensitive_headers_event):
         """
         Test get_header method with case-insensitive lookup.
@@ -134,6 +140,7 @@ class TestMultiCloudQueryParams:
     """
     Test Query Parameter related functionality for MultiCloudEvent.
     """
+
     def test_get_query_param_single_value(self):
         """
         Test get_query_param with single parameter values.
@@ -142,7 +149,7 @@ class TestMultiCloudQueryParams:
             method="GET",
             path="/search",
             headers={},
-            query_string="q=python&limit=10&active=true"
+            query_string="q=python&limit=10&active=true",
         )
 
         assert event.get_query_param("q") == "python"
@@ -157,7 +164,7 @@ class TestMultiCloudQueryParams:
             method="GET",
             path="/search",
             headers={},
-            query_string="tags=python&tags=web&tags=api"
+            query_string="tags=python&tags=web&tags=api",
         )
 
         # Should return the first value
@@ -168,10 +175,7 @@ class TestMultiCloudQueryParams:
         Test get_query_param with default value.
         """
         event = MultiCloudEvent(
-            method="GET",
-            path="/search",
-            headers={},
-            query_string="q=python"
+            method="GET", path="/search", headers={}, query_string="q=python"
         )
 
         # Parameter exists
@@ -187,11 +191,7 @@ class TestMultiCloudQueryParams:
         """
         Test get_query_param with empty query string.
         """
-        event = MultiCloudEvent(
-            method="GET",
-            path="/test",
-            headers={}
-        )
+        event = MultiCloudEvent(method="GET", path="/test", headers={})
 
         assert event.get_query_param("anything") is None
         assert event.get_query_param("anything", "default") == "default"
@@ -201,14 +201,13 @@ class TestMultiCloudJson:
     """
     Tests for JSON related functionality in MultiCloudEvent.
     """
+
     def test_is_json_true_cases(self, json_content_type):
         """
         Test is_json method returns True for JSON content types.
         """
         event = MultiCloudEvent(
-            method="POST",
-            path="/api",
-            headers={"content-type": json_content_type}
+            method="POST", path="/api", headers={"content-type": json_content_type}
         )
         assert event.is_json(), f"Failed for content-type: {json_content_type}"
 
@@ -217,9 +216,7 @@ class TestMultiCloudJson:
         Test is_json method returns False for non-JSON content types.
         """
         event = MultiCloudEvent(
-            method="POST",
-            path="/api",
-            headers={"content-type": non_json_content_type}
+            method="POST", path="/api", headers={"content-type": non_json_content_type}
         )
         assert not event.is_json(), f"Failed for content-type: {non_json_content_type}"
 
@@ -238,7 +235,7 @@ class TestMultiCloudJson:
             method="POST",
             path="/api",
             headers={"content-type": "application/json"},
-            body=body_data
+            body=body_data,
         )
 
         result = event.get_json()
@@ -249,12 +246,7 @@ class TestMultiCloudJson:
         """
         Test get_json method with non-dictionary body.
         """
-        test_cases = [
-            "string body",
-            123,
-            ["list", "body"],
-            None
-        ]
+        test_cases = ["string body", 123, ["list", "body"], None]
 
         for body in test_cases:
             basic_post_event.body = body
@@ -265,11 +257,7 @@ class TestMultiCloudJson:
         """
         Test get_json method when body is None.
         """
-        event = MultiCloudEvent(
-            method="GET",
-            path="/api",
-            headers={}
-        )
+        event = MultiCloudEvent(method="GET", path="/api", headers={})
 
         assert event.get_json() is None
 
@@ -288,7 +276,9 @@ class TestMultiCloudJson:
         Test get_json method with malformed JSON string.
         """
         assert malformed_json_event.get_json() is None
-        assert malformed_json_event.get_text() is not None  # Should still return as text
+        assert (
+            malformed_json_event.get_text() is not None
+        )  # Should still return as text
 
     def test_get_json_non_json_content_type(self):
         """
@@ -298,7 +288,7 @@ class TestMultiCloudJson:
             method="POST",
             path="/api/data",
             headers={"content-type": "text/plain"},
-            body='{"name": "test"}'  # Valid JSON but wrong content-type
+            body='{"name": "test"}',  # Valid JSON but wrong content-type
         )
 
         assert event.get_json() is None
@@ -308,6 +298,7 @@ class TestMultiCloudBinary:
     """
     Tests for Binary related functionality in MultiCloudEvent.
     """
+
     def test_is_binary_with_bytes_body(self, png_binary_event):
         """
         Test is_binary method with bytes body.
@@ -321,10 +312,7 @@ class TestMultiCloudBinary:
         Test is_binary method with non-bytes body.
         """
         event = MultiCloudEvent(
-            method="POST",
-            path="/api",
-            headers={},
-            body=non_dict_body
+            method="POST", path="/api", headers={}, body=non_dict_body
         )
 
         assert not event.is_binary(), f"Failed for body: {non_dict_body}"
@@ -356,20 +344,10 @@ class TestMultiCloudBinary:
         """
         Test get_text method with non-text body.
         """
-        test_cases = [
-            {"json": "body"},
-            ["list", "body"],
-            123,
-            None
-        ]
+        test_cases = [{"json": "body"}, ["list", "body"], 123, None]
 
         for body in test_cases:
-            event = MultiCloudEvent(
-                method="POST",
-                path="/api",
-                headers={},
-                body=body
-            )
+            event = MultiCloudEvent(method="POST", path="/api", headers={}, body=body)
 
             assert event.get_text() is None, f"Failed for body: {body}"
 
@@ -397,6 +375,7 @@ class TestMultiCloudFormData:
     """
     Tests for Form Data related functionality in MultiCloudEvent.
     """
+
     def test_is_form_data_true_cases(self, basic_post_event):
         """
         Test is_form_data method returns True for form data content types.
@@ -405,12 +384,14 @@ class TestMultiCloudFormData:
             "application/x-www-form-urlencoded",
             "application/x-www-form-urlencoded; charset=utf-8",
             "Application/X-WWW-Form-Urlencoded",
-            "APPLICATION/X-WWW-FORM-URLENCODED"
+            "APPLICATION/X-WWW-FORM-URLENCODED",
         ]
 
         for content_type in test_cases:
-            basic_post_event.headers['content-type'] = content_type
-            assert basic_post_event.is_form_data(), f"Failed for content-type: {content_type}"
+            basic_post_event.headers["content-type"] = content_type
+            assert (
+                basic_post_event.is_form_data()
+            ), f"Failed for content-type: {content_type}"
 
     def test_is_form_data_false_cases(self, basic_post_event):
         """
@@ -421,12 +402,14 @@ class TestMultiCloudFormData:
             "text/plain",
             "multipart/form-data",
             "application/xml",
-            ""
+            "",
         ]
 
         for content_type in test_cases:
-            basic_post_event.headers['content-type'] = content_type
-            assert not basic_post_event.is_form_data(), f"Failed for content-type: {content_type}"
+            basic_post_event.headers["content-type"] = content_type
+            assert (
+                not basic_post_event.is_form_data()
+            ), f"Failed for content-type: {content_type}"
 
     def test_is_multipart_true_cases(self, basic_post_event):
         """
@@ -436,12 +419,14 @@ class TestMultiCloudFormData:
             "multipart/form-data",
             "multipart/form-data; boundary=----WebKitFormBoundary",
             "Multipart/Form-Data",
-            "MULTIPART/FORM-DATA"
+            "MULTIPART/FORM-DATA",
         ]
 
         for content_type in test_cases:
-            basic_post_event.headers['content-type'] = content_type
-            assert basic_post_event.is_multipart(), f"Failed for content-type: {content_type}"
+            basic_post_event.headers["content-type"] = content_type
+            assert (
+                basic_post_event.is_multipart()
+            ), f"Failed for content-type: {content_type}"
 
     def test_is_multipart_false_cases(self, basic_post_event):
         """
@@ -452,12 +437,14 @@ class TestMultiCloudFormData:
             "application/x-www-form-urlencoded",
             "text/plain",
             "application/octet-stream",
-            ""
+            "",
         ]
 
         for content_type in test_cases:
-            basic_post_event.headers['content-type'] = content_type
-            assert not basic_post_event.is_multipart(), f"Failed for content-type: {content_type}"
+            basic_post_event.headers["content-type"] = content_type
+            assert (
+                not basic_post_event.is_multipart()
+            ), f"Failed for content-type: {content_type}"
 
     def test_form_data_body_handling(self, form_data_event):
         """
@@ -466,7 +453,10 @@ class TestMultiCloudFormData:
         assert form_data_event.is_form_data()
         assert not form_data_event.is_json()
         assert not form_data_event.is_multipart()
-        assert form_data_event.get_text() == "name=John+Doe&email=john%40example.com&age=30"
+        assert (
+            form_data_event.get_text()
+            == "name=John+Doe&email=john%40example.com&age=30"
+        )
         assert form_data_event.get_json() is None
 
     def test_multipart_form_data_body_handling(self):
@@ -475,23 +465,23 @@ class TestMultiCloudFormData:
         """
         boundary = "----WebKitFormBoundary7MA4YWxkTrZu0gW"
         multipart_body = (
-            f'--{boundary}\r\n'
+            f"--{boundary}\r\n"
             'Content-Disposition: form-data; name="name"\r\n'
-            '\r\n'
-            'John Doe\r\n'
-            f'--{boundary}\r\n'
+            "\r\n"
+            "John Doe\r\n"
+            f"--{boundary}\r\n"
             'Content-Disposition: form-data; name="file"; filename="test.txt"\r\n'
-            'Content-Type: text/plain\r\n'
-            '\r\n'
-            'File content here\r\n'
-            f'--{boundary}--\r\n'
+            "Content-Type: text/plain\r\n"
+            "\r\n"
+            "File content here\r\n"
+            f"--{boundary}--\r\n"
         )
 
         event = MultiCloudEvent(
             method="POST",
             path="/upload",
             headers={"content-type": f"multipart/form-data; boundary={boundary}"},
-            body=multipart_body
+            body=multipart_body,
         )
 
         assert event.is_multipart()
@@ -516,7 +506,7 @@ class TestMultiCloudFormData:
             method="POST",
             path="/api",
             headers={"content-type": "application/json"},
-            body={"key": "value"}
+            body={"key": "value"},
         )
         assert json_event.is_json()
         assert not json_event.is_form_data()
@@ -528,7 +518,7 @@ class TestMultiCloudFormData:
             method="POST",
             path="/form",
             headers={"content-type": "application/x-www-form-urlencoded"},
-            body="key=value"
+            body="key=value",
         )
         assert form_event.is_form_data()
         assert not form_event.is_json()
@@ -540,17 +530,19 @@ class TestMultiCloudFormData:
             method="POST",
             path="/upload",
             headers={"content-type": "application/pdf"},
-            body=b"%PDF-1.4"
+            body=b"%PDF-1.4",
         )
         assert binary_event.is_binary()
         assert not binary_event.is_json()
         assert not binary_event.is_form_data()
         assert not binary_event.is_multipart()
 
+
 class TestMultiCloudXml:
     """
     Tests for XML related functionality in MultiCloudEvent.
     """
+
     def test_is_xml_true_cases(self):
         """
         Test is_xml method returns True for XML content types.
@@ -560,14 +552,12 @@ class TestMultiCloudXml:
             "application/xml; charset=utf-8",
             "text/xml",
             "Application/XML",
-            "TEXT/XML"
+            "TEXT/XML",
         ]
 
         for content_type in test_cases:
             event = MultiCloudEvent(
-                method="POST",
-                path="/api",
-                headers={"content-type": content_type}
+                method="POST", path="/api", headers={"content-type": content_type}
             )
             assert event.is_xml(), f"Failed for content-type: {content_type}"
 
@@ -580,14 +570,12 @@ class TestMultiCloudXml:
             "text/plain",
             "application/x-www-form-urlencoded",
             "multipart/form-data",
-            ""
+            "",
         ]
 
         for content_type in test_cases:
             event = MultiCloudEvent(
-                method="POST",
-                path="/api",
-                headers={"content-type": content_type}
+                method="POST", path="/api", headers={"content-type": content_type}
             )
             assert not event.is_xml(), f"Failed for content-type: {content_type}"
 
@@ -595,20 +583,17 @@ class TestMultiCloudXml:
         """
         Test get_xml method with simple XML.
         """
-        xml_string = '<user><name>John Doe</name><age>30</age></user>'
+        xml_string = "<user><name>John Doe</name><age>30</age></user>"
 
         event = MultiCloudEvent(
             method="POST",
             path="/api/users",
             headers={"content-type": "application/xml"},
-            body=xml_string
+            body=xml_string,
         )
 
         result = event.get_xml()
-        expected = {
-            'name': 'John Doe',
-            'age': '30'
-        }
+        expected = {"name": "John Doe", "age": "30"}
 
         assert result == expected
         assert isinstance(result, dict)
@@ -623,14 +608,11 @@ class TestMultiCloudXml:
             method="POST",
             path="/api/users",
             headers={"content-type": "application/xml"},
-            body=xml_string
+            body=xml_string,
         )
 
         result = event.get_xml()
-        expected = {
-            '@attributes': {'id': '123', 'active': 'true'},
-            'name': 'Jane'
-        }
+        expected = {"@attributes": {"id": "123", "active": "true"}, "name": "Jane"}
 
         assert result == expected
 
@@ -638,7 +620,7 @@ class TestMultiCloudXml:
         """
         Test get_xml method with nested XML elements.
         """
-        xml_string = '''
+        xml_string = """
         <user>
             <profile>
                 <name>John</name>
@@ -648,24 +630,19 @@ class TestMultiCloudXml:
                 <theme>dark</theme>
             </settings>
         </user>
-        '''
+        """
 
         event = MultiCloudEvent(
             method="POST",
             path="/api/users",
             headers={"content-type": "application/xml"},
-            body=xml_string.strip()
+            body=xml_string.strip(),
         )
 
         result = event.get_xml()
         expected = {
-            'profile': {
-                'name': 'John',
-                'email': 'john@example.com'
-            },
-            'settings': {
-                'theme': 'dark'
-            }
+            "profile": {"name": "John", "email": "john@example.com"},
+            "settings": {"theme": "dark"},
         }
 
         assert result == expected
@@ -674,25 +651,23 @@ class TestMultiCloudXml:
         """
         Test get_xml method with duplicate XML tags (should create list).
         """
-        xml_string = '''
+        xml_string = """
         <users>
             <user>John</user>
             <user>Jane</user>
             <user>Bob</user>
         </users>
-        '''
+        """
 
         event = MultiCloudEvent(
             method="POST",
             path="/api/users",
             headers={"content-type": "application/xml"},
-            body=xml_string.strip()
+            body=xml_string.strip(),
         )
 
         result = event.get_xml()
-        expected = {
-            'user': ['John', 'Jane', 'Bob']
-        }
+        expected = {"user": ["John", "Jane", "Bob"]}
 
         assert result == expected
 
@@ -700,13 +675,13 @@ class TestMultiCloudXml:
         """
         Test get_xml method with malformed XML.
         """
-        malformed_xml = '<user><name>John</name><unclosed>'
+        malformed_xml = "<user><name>John</name><unclosed>"
 
         event = MultiCloudEvent(
             method="POST",
             path="/api/data",
             headers={"content-type": "application/xml"},
-            body=malformed_xml
+            body=malformed_xml,
         )
 
         assert event.get_xml() is None
@@ -719,7 +694,7 @@ class TestMultiCloudXml:
             method="POST",
             path="/api/data",
             headers={"content-type": "application/json"},
-            body='<user><name>test</name></user>'  # Valid XML but wrong content-type
+            body="<user><name>test</name></user>",  # Valid XML but wrong content-type
         )
 
         assert event.get_xml() is None
@@ -732,7 +707,7 @@ class TestMultiCloudXml:
             method="POST",
             path="/api/data",
             headers={"content-type": "application/xml"},
-            body=b'<user><name>test</name></user>'  # bytes body
+            body=b"<user><name>test</name></user>",  # bytes body
         )
 
         assert event.get_xml() is None
@@ -741,13 +716,13 @@ class TestMultiCloudXml:
         """
         Test get_base64 method with binary data.
         """
-        binary_data = b'\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR'
+        binary_data = b"\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR"
 
         event = MultiCloudEvent(
             method="POST",
             path="/upload",
             headers={"content-type": "image/png"},
-            body=binary_data
+            body=binary_data,
         )
 
         result = event.get_base64()
@@ -765,7 +740,7 @@ class TestMultiCloudXml:
             method="POST",
             path="/api",
             headers={"content-type": "text/plain"},
-            body="text content"
+            body="text content",
         )
 
         assert event.get_base64() is None
@@ -778,7 +753,7 @@ class TestMultiCloudXml:
             method="POST",
             path="/api",
             headers={"content-type": "application/json"},
-            body={"name": "test"}
+            body={"name": "test"},
         )
 
         assert event.get_text() is None
@@ -791,7 +766,7 @@ class TestMultiCloudXml:
             method="POST",
             path="/api",
             headers={"content-type": "application/json"},
-            body=["item1", "item2"]
+            body=["item1", "item2"],
         )
 
         assert event.get_text() is None
@@ -804,7 +779,7 @@ class TestMultiCloudXml:
             method="POST",
             path="/api",
             headers={"Content-Type": "APPLICATION/JSON; CHARSET=UTF-8"},
-            body='{"test": true}'
+            body='{"test": true}',
         )
 
         assert event.is_json()
@@ -827,7 +802,7 @@ class TestMultiCloudXml:
             method="POST",
             path="/api/users",
             headers={"content-type": "application/json"},
-            body=json_string
+            body=json_string,
         )
 
         # Should work as both JSON and text

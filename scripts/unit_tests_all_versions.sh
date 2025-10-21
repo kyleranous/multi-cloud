@@ -3,12 +3,35 @@
 
 set -e  # Exit on any error
 
+# Deactivate current virtual environment if one is active
+deactivate_current_venv() {
+    if [[ -n "$VIRTUAL_ENV" ]]; then
+        warning "Currently in virtual environment: $VIRTUAL_ENV"
+        log "Deactivating current virtual environment..."
+        
+        # Check if deactivate function exists
+        if type deactivate >/dev/null 2>&1; then
+            deactivate
+            success "Deactivated virtual environment"
+        else
+            # Alternative method - unset environment variables
+            unset VIRTUAL_ENV
+            unset VIRTUAL_ENV_PROMPT
+            # Reset PATH by removing venv paths
+            export PATH=$(echo $PATH | tr ':' '\n' | grep -v "/venv" | grep -v "/.venv" | tr '\n' ':' | sed 's/:$//')
+            warning "Manually cleared virtual environment variables"
+        fi
+    else
+        log "No virtual environment currently active"
+    fi
+}
+
 # Configuration
 PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
 RESULTS_DIR="${PROJECT_ROOT}/test_results/${TIMESTAMP}"
 
-# Supported Python versions (adjust as needed) - Fixed comma issue
+# Supported Python versions (adjust as needed)
 PYTHON_VERSIONS=("3.11" "3.12" "3.13" "3.14")
 
 # Colors for output
@@ -53,6 +76,7 @@ Test Run Started: $(date)
 Project Root: ${PROJECT_ROOT}
 Python Versions: ${PYTHON_VERSIONS[*]}
 Results Directory: ${RESULTS_DIR}
+Initial Virtual Environment: ${VIRTUAL_ENV:-"None"}
 EOF
 }
 
@@ -85,8 +109,17 @@ install_dependencies() {
     
     log "Installing dependencies for Python $version..."
     
+    # Use a subshell to avoid contaminating the parent shell environment
     (
+        # Ensure we start clean
+        unset VIRTUAL_ENV
+        unset VIRTUAL_ENV_PROMPT
+        
+        # Activate the specific virtual environment
         source "$venv_path/bin/activate"
+        
+        # Verify we're in the right environment
+        log "Activated virtual environment: $VIRTUAL_ENV"
         
         # Upgrade pip first
         log "Upgrading pip..."
@@ -148,8 +181,13 @@ run_tests_for_version() {
         return 1
     fi
     
-    # Activate virtual environment and run tests
+    # Use a subshell to avoid contaminating the parent shell environment
     (
+        # Ensure we start clean
+        unset VIRTUAL_ENV
+        unset VIRTUAL_ENV_PROMPT
+        
+        # Activate the specific virtual environment
         source "$venv_path/bin/activate"
         
         # Verify Python version
@@ -160,7 +198,7 @@ run_tests_for_version() {
         # Save environment info
         cat > "${RESULTS_DIR}/env_${version}.txt" << EOF
 Python Version: $(python --version)
-Virtual Environment: $venv_path
+Virtual Environment: $VIRTUAL_ENV
 Working Directory: $(pwd)
 Python Path: $(which python)
 Pip Version: $(pip --version)
@@ -359,6 +397,9 @@ main() {
     log "Starting multi-version test run..."
     log "Project root: $PROJECT_ROOT"
     log "Results will be saved to: $RESULTS_DIR"
+    
+    # Deactivate any current virtual environment first
+    deactivate_current_venv
     
     create_results_dir
     

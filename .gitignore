@@ -214,3 +214,6 @@ __marimo__/
 # Ignore the database file
 *.db
 *.sqlite3
+
+# Generated Test Result Documentation
+test_results/

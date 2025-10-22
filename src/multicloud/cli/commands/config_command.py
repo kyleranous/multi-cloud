@@ -5,9 +5,10 @@ Configuration Management Commands
 import click
 import yaml
 
+# pylint: disable=relative-beyond-top-level
 from ..config.config_manager import (
     config_manager,
-)  # pylint: disable=relative-beyond-top-level
+)
 
 
 @click.group()

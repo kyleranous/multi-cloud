@@ -77,7 +77,7 @@ event = MultiCloudEvent(
     query_string="page=1&limit=10"
 )
 
-event.get_query_parame("page") # 1
+event.get_query_param("page") # 1
 event.get_query_param("limit") # 10
 event.get_query_param("name") # "none"
 ```

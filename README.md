@@ -34,12 +34,13 @@ The MultiCloud CLI provides several commands for working with serverless functio
 In Progress
 
 ## Supported Python Versions
-| Version | Planned | Tested |
-| :------ | :-----: | :----: |
-| 3.11    | ✅      | 🧪     |
-| 3.12    | ✅      | 📋     |
-| 3.13    | ✅      | 📋     |
-| 3.14    | ✅      | 📋     |
+| Version        | Planned | Tested |
+| :------        | :-----: | :----: |
+| 3.10 and below | ❌      | ❌     |
+| 3.11           | ✅      | 🧪     |
+| 3.12           | ✅      | 🧪     |
+| 3.13           | ✅      | 🧪     |
+| 3.14           | ✅      | 🧪     |
 
 Legend:
 - ✅ Supported
@@ -53,17 +54,19 @@ Legend:
 | AWS Lambda             | 📋 Planned        |
 | Azure Functions        | 📋 Planned        |
 | Google Cloud Functions | 📋 Planned        |
+| SpinKube               | 🔍 Investigating  |
+| OpenFaaS               | 🔍 Investigating  |
 
 ## Contributing
 Quick Contribution Steps
 1. Review all documentation
 2. Fork the repository
-3. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Create a feature branch (`git checkout -b feature/new-feature`)
 4. Make the changes
 5. Add tests for new functionality
 6. Run the test suite (`pytest`)
-7. Commit your changes (`git commit -m 'Add new feature`)
-8. Push to the branch (`git push origin feature/amazing-feature`)
+7. Commit your changes (`git commit -m 'Valid commit message here`)
+8. Push to the branch (`git push origin feature/new-feature`)
 9. Open a Pull Request
 
 ## Documentation
